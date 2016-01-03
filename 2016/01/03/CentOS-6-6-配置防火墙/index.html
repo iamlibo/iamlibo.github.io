@@ -41,7 +41,7 @@
 <link href="/thinker/css/main.css?v=5.0.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="CentOS," />
 
 
 
@@ -57,16 +57,16 @@
 
 
 
-<meta name="description" content="本博客创建于2016年1月2日，长春。">
+<meta name="description" content="本篇内容最初发表于我的 另一个博客">
 <meta property="og:type" content="article">
-<meta property="og:title" content="关于本博客">
-<meta property="og:url" content="http://iamlibo.github.io/thinker/2016/01/02/关于本博客/index.html">
+<meta property="og:title" content="CentOS 6.6 配置防火墙">
+<meta property="og:url" content="http://iamlibo.github.io/thinker/2016/01/03/CentOS-6-6-配置防火墙/index.html">
 <meta property="og:site_name" content="快乐地生活">
-<meta property="og:description" content="本博客创建于2016年1月2日，长春。">
-<meta property="og:updated_time" content="2016-01-03T06:44:16.912Z">
+<meta property="og:description" content="本篇内容最初发表于我的 另一个博客">
+<meta property="og:updated_time" content="2016-01-03T06:44:31.514Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="关于本博客">
-<meta name="twitter:description" content="本博客创建于2016年1月2日，长春。">
+<meta name="twitter:title" content="CentOS 6.6 配置防火墙">
+<meta name="twitter:description" content="本篇内容最初发表于我的 另一个博客">
 
 
 
@@ -84,7 +84,7 @@
   };
 </script>
 
-  <title> 关于本博客 | 快乐地生活 </title>
+  <title> CentOS 6.6 配置防火墙 | 快乐地生活 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -242,7 +242,7 @@
             
             
               
-                关于本博客
+                CentOS 6.6 配置防火墙
               
             
           </h1>
@@ -254,19 +254,38 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-01-02T16:16:07+08:00" content="2016-01-02">
-              2016-01-02
+            <time itemprop="dateCreated" datetime="2016-01-03T13:19:11+08:00" content="2016-01-03">
+              2016-01-03
             </time>
           </span>
 
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/thinker/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
           
 
           
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/thinker/2016/01/02/关于本博客/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/01/02/关于本博客/" itemprop="commentsCount"></span>
+                <a href="/thinker/2016/01/03/CentOS-6-6-配置防火墙/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/01/03/CentOS-6-6-配置防火墙/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -287,25 +306,140 @@
       
 
       
-        <p>本博客创建于2016年1月2日，长春。</p>
+        <p>本篇内容最初发表于我的 <a href="http://my.oschina.net/thinker4self/blog/510566" target="_blank" rel="external">另一个博客</a><br><a id="more"></a></p>
+<h2 id="1_u3001_u53EF_u4EE5_u5728shell_u7A97_u53E3_u6267_u884C_u4E0B_u9762_u547D_u4EE4"><a href="#1_u3001_u53EF_u4EE5_u5728shell_u7A97_u53E3_u6267_u884C_u4E0B_u9762_u547D_u4EE4" class="headerlink" title="1、可以在shell窗口执行下面命令"></a>1、可以在shell窗口执行下面命令</h2><pre><code>#这个一定要先做，不然清空后可能会悲剧
+iptables -P INPUT ACCEPT
+ #清空默认所有规则 
+iptales -F
 
+#清空自定义的所有规则 
+iptables -X
+
+#计数器置0
+ iptables -Z
+
+ #如果没有此规则，你将不能通过127.0.0.1访问本地服务，例如ping 127.0.0.1 
+ iptables -A INPUT -i lo -j ACCEPT    
+
+#开启ssh端口22 一定要加，要不然不能从远程访问了
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+#保存配置
+service iptables save
+
+#重启防火墙服务,重启后上面的配置就生效了
+service iptables restart
+</code></pre><p>现在可以查看状态</p>
+<pre><code>iptables -L
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     all  --  anywhere             anywhere            
+ACCEPT     tcp  --  anywhere             anywhere            tcp dpt:ssh 
+ACCEPT     tcp  --  anywhere             anywhere            tcp dpt:http 
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+REJECT     all  --  anywhere             anywhere            reject-with icmp-host-prohibited 
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+</code></pre><h2 id="2_u3001_u4E5F_u53EF_u4EE5_u901A_u8FC7_u7F16_u8F91_/etc/sysconfig/iptables__u6587_u4EF6_u8FBE_u5230_u4E0A_u9762_u76F8_u540C_u7684_u6548_u679C"><a href="#2_u3001_u4E5F_u53EF_u4EE5_u901A_u8FC7_u7F16_u8F91_/etc/sysconfig/iptables__u6587_u4EF6_u8FBE_u5230_u4E0A_u9762_u76F8_u540C_u7684_u6548_u679C" class="headerlink" title="2、也可以通过编辑 /etc/sysconfig/iptables 文件达到上面相同的效果"></a>2、也可以通过编辑 /etc/sysconfig/iptables 文件达到上面相同的效果</h2><pre><code>cat /etc/sysconfig/iptables
+
+# Generated by iptables-save v1.4.7 on Thu Sep 24 02:58:30 2015
+*filter
+:INPUT ACCEPT [203:40425]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [108209:100980717]
+-A INPUT -i lo -j ACCEPT 
+-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT 
+#-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+
+##下面两行如果不加，除了上述两个规则之外的端口也是可以访问的     
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+
+COMMIT
+</code></pre><p>保存文件后重启服务</p>
+<pre><code>service iptables restart
+</code></pre><h2 id="3_u3001_u7F51_u4E0A_u627E_u7684_u5176_u4ED6_u914D_u7F6E_u8BF4_u660E_uFF1A"><a href="#3_u3001_u7F51_u4E0A_u627E_u7684_u5176_u4ED6_u914D_u7F6E_u8BF4_u660E_uFF1A" class="headerlink" title="3、网上找的其他配置说明："></a>3、网上找的其他配置说明：</h2><pre><code>#如果没有此规则，你将不能通过127.0.0.1访问本地服务，例如ping 127.0.0.1 iptables -A INPUT -i lo -j ACCEPT    
+
+#开启ssh端口22 
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+#开启FTP端口21 
+iptables -A INPUT -p tcp --dport 21 -j ACCEPT
+
+#开启web服务端口80
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+
+#tomcat 
+iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+
+#mysql 
+iptables -A INPUT -p tcp --dport xxxx -j ACCEPT
+
+#允许icmp包通过,也就是允许ping 
+iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+
+#允许所有对外请求的返回包 
+#本机对外请求相当于OUTPUT,对于返回数据包必须接收啊，这相当于INPUT了 
+iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
+
+#如果要添加内网ip信任（接受其所有TCP请求） 
+iptables -A INPUT -p tcp -s 45.96.174.68 -j ACCEPT
+
+#每秒中最多允许5个新连接
+iptables -A FORWARD -p tcp --syn -m limit --limit 1/s --limit-burst 5 -j ACCEPT
+
+#每秒中最多允许5个新连接
+iptables -A FORWARD -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s -j ACCEPT
+
+#Ping洪水攻击
+iptables -A FORWARD -p icmp --icmp-type echo-request -m limit --limit 1/s -j ACCEPT
+
+#封单个IP的命令是：
+iptables -I INPUT -s 222.34.135.106 -j DROP
+
+#封IP段的命令是：
+iptables -I INPUT -s 211.1.0.0/16 -j DROP
+iptables -I INPUT -s 211.2.0.0/16 -j DROP
+iptables -I INPUT -s 211.3.0.0/16 -j DROP
+
+#封整个段的命令是：
+iptables -I INPUT -s 211.0.0.0/8 -j DROP
+
+#封几个段的命令是：
+iptables -I INPUT -s 61.37.80.0/24 -j DROP
+iptables -I INPUT -s 61.37.81.0/24 -j DROP
+
+#过滤所有非以上规则的请求 
+iptables -P INPUT DROP
+</code></pre>
       
     </div>
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/thinker/tags/CentOS/" rel="tag">#CentOS</a>
+          
+        </div>
       
 
       
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/thinker/2016/01/02/Markdown-新手指南/" rel="next" title="Markdown 新手指南">
+                <i class="fa fa-chevron-left"></i> Markdown 新手指南
+              </a>
+            
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/thinker/2016/01/02/为新博做序/" rel="prev" title="为新博做序">
-                为新博做序 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -354,8 +488,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/01/02/关于本博客/"
-           data-title="关于本博客" data-url="http://iamlibo.github.io/thinker/2016/01/02/关于本博客/">
+      <div class="ds-thread" data-thread-key="2016/01/03/CentOS-6-6-配置防火墙/"
+           data-title="CentOS 6.6 配置防火墙" data-url="http://iamlibo.github.io/thinker/2016/01/03/CentOS-6-6-配置防火墙/">
       </div>
     
   </div>
@@ -463,7 +597,7 @@
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1_u3001_u53EF_u4EE5_u5728shell_u7A97_u53E3_u6267_u884C_u4E0B_u9762_u547D_u4EE4"><span class="nav-number">1.</span> <span class="nav-text">1、可以在shell窗口执行下面命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2_u3001_u4E5F_u53EF_u4EE5_u901A_u8FC7_u7F16_u8F91_/etc/sysconfig/iptables__u6587_u4EF6_u8FBE_u5230_u4E0A_u9762_u76F8_u540C_u7684_u6548_u679C"><span class="nav-number">2.</span> <span class="nav-text">2、也可以通过编辑 /etc/sysconfig/iptables 文件达到上面相同的效果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3_u3001_u7F51_u4E0A_u627E_u7684_u5176_u4ED6_u914D_u7F6E_u8BF4_u660E_uFF1A"><span class="nav-number">3.</span> <span class="nav-text">3、网上找的其他配置说明：</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
