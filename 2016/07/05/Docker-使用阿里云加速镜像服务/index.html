@@ -17,13 +17,13 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"www.51liveup.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"blog.51liveup.cn","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="使用Docker默认的仓库在国内是相当的慢，还好阿里云提供了镜像服务（当然还有别家）在CentOS7 + Docker1.10的环境下按照阿里提供的帮助文档怎么也不好用，体验不到加速度的感觉.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Docker 使用阿里云加速镜像服务">
-<meta property="og:url" content="http://www.51liveup.cn/2016/07/05/Docker-%E4%BD%BF%E7%94%A8%E9%98%BF%E9%87%8C%E4%BA%91%E5%8A%A0%E9%80%9F%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:url" content="http://blog.51liveup.cn/2016/07/05/Docker-%E4%BD%BF%E7%94%A8%E9%98%BF%E9%87%8C%E4%BA%91%E5%8A%A0%E9%80%9F%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1/index.html">
 <meta property="og:site_name" content="快乐地生活">
 <meta property="og:description" content="使用Docker默认的仓库在国内是相当的慢，还好阿里云提供了镜像服务（当然还有别家）在CentOS7 + Docker1.10的环境下按照阿里提供的帮助文档怎么也不好用，体验不到加速度的感觉.">
 <meta property="og:locale" content="zh_CN">
@@ -33,7 +33,7 @@
 <meta property="article:tag" content="docker">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://www.51liveup.cn/2016/07/05/Docker-%E4%BD%BF%E7%94%A8%E9%98%BF%E9%87%8C%E4%BA%91%E5%8A%A0%E9%80%9F%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1/">
+<link rel="canonical" href="http://blog.51liveup.cn/2016/07/05/Docker-%E4%BD%BF%E7%94%A8%E9%98%BF%E9%87%8C%E4%BA%91%E5%8A%A0%E9%80%9F%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1/">
 
 
 <script id="page-configurations">
@@ -130,7 +130,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">27</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">28</span></a>
 
   </li>
   </ul>
@@ -161,7 +161,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.51liveup.cn/2016/07/05/Docker-%E4%BD%BF%E7%94%A8%E9%98%BF%E9%87%8C%E4%BA%91%E5%8A%A0%E9%80%9F%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1/">
+    <link itemprop="mainEntityOfPage" href="http://blog.51liveup.cn/2016/07/05/Docker-%E4%BD%BF%E7%94%A8%E9%98%BF%E9%87%8C%E4%BA%91%E5%8A%A0%E9%80%9F%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/default_avatar.jpg">
@@ -322,7 +322,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">28</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
