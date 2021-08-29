@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN,zh-Hans,default">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"51liveup.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="rsync 简介Rsync是linux&#x2F;Unix文件同步和传送工具。用于替代rcp的一个工具，可通过 LAN&#x2F;WAN 快速同步多台主机之间的文件。也可以使用 rsync 同步本地硬盘中的不同目录。rsync 使用所谓的rsync算法进行数据同步，这种算法只传送两个文件的不同部分，而不是每次都整份传送，因此速度相当快。 本次使用rsync定时同步两台机器间的文件夹，Linux是redhat6.5，默">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux定时同步文件夹">
+<meta property="og:url" content="http://51liveup.cn/2016/10/20/Linux%E5%AE%9A%E6%97%B6%E5%90%8C%E6%AD%A5%E6%96%87%E4%BB%B6%E5%A4%B9/index.html">
+<meta property="og:site_name" content="快乐地生活">
+<meta property="og:description" content="rsync 简介Rsync是linux&#x2F;Unix文件同步和传送工具。用于替代rcp的一个工具，可通过 LAN&#x2F;WAN 快速同步多台主机之间的文件。也可以使用 rsync 同步本地硬盘中的不同目录。rsync 使用所谓的rsync算法进行数据同步，这种算法只传送两个文件的不同部分，而不是每次都整份传送，因此速度相当快。 本次使用rsync定时同步两台机器间的文件夹，Linux是redhat6.5，默">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-10-20T09:08:43.000Z">
+<meta property="article:modified_time" content="2021-08-29T01:01:38.751Z">
+<meta property="article:author" content="大道自然">
+<meta property="article:tag" content="linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://51liveup.cn/2016/10/20/Linux%E5%AE%9A%E6%97%B6%E5%90%8C%E6%AD%A5%E6%96%87%E4%BB%B6%E5%A4%B9/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux定时同步文件夹 | 快乐地生活</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">快乐地生活</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://51liveup.cn/2016/10/20/Linux%E5%AE%9A%E6%97%B6%E5%90%8C%E6%AD%A5%E6%96%87%E4%BB%B6%E5%A4%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="大道自然">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="快乐地生活">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux定时同步文件夹
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-10-20 17:08:43" itemprop="dateCreated datePublished" datetime="2016-10-20T17:08:43+08:00">2016-10-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-29 09:01:38" itemprop="dateModified" datetime="2021-08-29T09:01:38+08:00">2021-08-29</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="rsync-简介"><a href="#rsync-简介" class="headerlink" title="rsync 简介"></a>rsync 简介</h1><p>Rsync是linux/Unix文件同步和传送工具。用于替代rcp的一个工具，可通过 LAN/WAN 快速同步多台主机之间的文<br>件。也可以使用 rsync 同步本地硬盘中的不同目录。rsync 使用所谓的rsync算法进行数据同步，这种算法只传送两个文件的不同部分，而不是每次都整份传送，因此速度相当快。</p>
+<p>本次使用rsync定时同步两台机器间的文件夹，Linux是redhat6.5，默认已经安装了rsync.</p>
+<span id="more"></span>
+<h1 id="同步文件夹"><a href="#同步文件夹" class="headerlink" title="同步文件夹"></a>同步文件夹</h1><p>首次使用如下命令进行全量同步，并将同步的日志记录在/var/logs/rsync.log文件中。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rsync -ravpogt --log-file=/var/logs/rsync.log --log-file-format=&#x27;%i %o %f %M %t&#x27; /source/path IP:/target/path</span><br></pre></td></tr></table></figure>
+<p>会显示同步的日志</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sending incremental file list</span><br><span class="line">....</span><br><span class="line">....</span><br><span class="line">....</span><br><span class="line">sent 5117763 bytes  received 90 bytes  2047141.20 bytes/sec</span><br><span class="line">total size is 77135632871  speedup is 15071.87</span><br></pre></td></tr></table></figure>
+<p>第一次同步完成，就需要定时去执行这个命令了，Linux的cron正好可以做这件事,将上面命令保存到一个文件中，并设置可执行权限.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim syncfile.sh</span><br></pre></td></tr></table></figure>
+<p>加入下面内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rsync -ravpogt --log-file=/var/logs/rsync.log --log-file-format=&#x27;%i %o %f %M %t&#x27; /source/path IP:/target/path</span><br></pre></td></tr></table></figure>
+<p>注意要修改IP目录等信息。<br>设置可执行权限</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 755 syncfile.sh</span><br></pre></td></tr></table></figure>
+<p>然后定时执行这个文件就可以。<br>使用命令编辑定时任务内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crontab -e</span><br></pre></td></tr></table></figure>
+<p>增加内容如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">* * * * * sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 3 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 6 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 9 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 12 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 15 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 18 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 21 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 24 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 27 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 30 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 33 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 36 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 39 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 42 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 45 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 48 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 51 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 54 &amp;&amp; sh /root/syncfile.sh</span><br><span class="line">* * * * * sleep 57 &amp;&amp; sh /root/syncfile.sh</span><br></pre></td></tr></table></figure>
+<p>上面的内容是指每三秒执行一次syncfile.sh。</p>
+<h1 id="rsync-参数"><a href="#rsync-参数" class="headerlink" title="rsync 参数"></a>rsync 参数</h1><p>rsync参数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">-v, --verbose                  详细模式输出</span><br><span class="line">-q, --quiet                       精简输出模式</span><br><span class="line">-c, --checksum               打开校验开关，强制对文件传输进行校验</span><br><span class="line">-a, --archive                   归档模式，表示以递归方式传输文件，并保持所有文件属性，等于-rlptgoD</span><br><span class="line">-r, --recursive                 对子目录以递归模式处理</span><br><span class="line">-R, --relative                  使用相对路径信息</span><br><span class="line">-b, --backup                  创建备份，也就是对于目的已经存在有同样的文件名时，将老的文件重新命名为~filename。可以使用--suffix选项来指定不同的备份文件前缀。</span><br><span class="line">--backup-dir                  将备份文件(如~filename)存放在在目录下。</span><br><span class="line">-suffix=SUFFIX             定义备份文件前缀</span><br><span class="line">-u, --update                   仅仅进行更新，也就是跳过所有已经存在于DST，并且文件时间晚于要备份的文件。(不覆盖更新的文件)</span><br><span class="line">-l, --links                         保留软链结</span><br><span class="line">-L, --copy-links              想对待常规文件一样处理软链结</span><br><span class="line">--copy-unsafe-links        仅仅拷贝指向SRC路径目录树以外的链结</span><br><span class="line">--safe-links                     忽略指向SRC路径目录树以外的链结</span><br><span class="line">-H, --hard-links              保留硬链结</span><br><span class="line">-p, --perms                    保持文件权限</span><br><span class="line">-o, --owner                    保持文件属主信息</span><br><span class="line">-g, --group                     保持文件属组信息</span><br><span class="line">-D, --devices                 保持设备文件信息</span><br><span class="line">-t, --times                      保持文件时间信息</span><br><span class="line">-S, --sparse                   对稀疏文件进行特殊处理以节省DST的空间</span><br><span class="line">-n, --dry-run                  现实哪些文件将被传输</span><br><span class="line">-W, --whole-file             拷贝文件，不进行增量检测</span><br><span class="line">-x, --one-file-system      不要跨越文件系统边界</span><br><span class="line">-B, --block-size=SIZE   检验算法使用的块尺寸，默认是700字节</span><br><span class="line">-e, --rsh=COMMAND 指定使用rsh、ssh方式进行数据同步</span><br><span class="line">--rsync-path=PATH      指定远程服务器上的rsync命令所在路径信息</span><br><span class="line">-C, --cvs-exclude          使用和CVS一样的方法自动忽略文件，用来排除那些不希望传输的文件</span><br><span class="line">--existing                      仅仅更新那些已经存在于DST的文件，而不备份那些新创建的文件</span><br><span class="line">--delete                         删除那些DST中SRC没有的文件</span><br><span class="line">--delete-excluded          同样删除接收端那些被该选项指定排除的文件</span><br><span class="line">--delete-after                传输结束以后再删除</span><br><span class="line">--ignore-errors             及时出现IO错误也进行删除</span><br><span class="line">--max-delete=NUM     最多删除NUM个文件</span><br><span class="line">--partial                        保留那些因故没有完全传输的文件，以是加快随后的再次传输</span><br><span class="line">--force                          强制删除目录，即使不为空</span><br><span class="line">--numeric-ids                不将数字的用户和组ID匹配为用户名和组名</span><br><span class="line">--timeout=TIME IP       超时时间，单位为秒</span><br><span class="line">-I, --ignore-times          不跳过那些有同样的时间和长度的文件</span><br><span class="line">--size-only                    当决定是否要备份文件时，仅仅察看文件大小而不考虑文件时间</span><br><span class="line">--modify-window=NUM 决定文件是否时间相同时使用的时间戳窗口，默认为0</span><br><span class="line">-T --temp-dir=DIR      在DIR中创建临时文件</span><br><span class="line">--compare-dest=DIR   同样比较DIR中的文件来决定是否需要备份</span><br><span class="line">-P 等同于 --partial</span><br><span class="line">--progress                    显示备份过程</span><br><span class="line">-z, --compress             对备份的文件在传输时进行压缩处理</span><br><span class="line">--exclude=PATTERN  指定排除不需要传输的文件模式</span><br><span class="line">--include=PATTERN   指定不排除而需要传输的文件模式</span><br><span class="line">--exclude-from=FILE   排除FILE中指定模式的文件</span><br><span class="line">--include-from=FILE   不排除FILE指定模式匹配的文件</span><br><span class="line">--version                      打印版本信息</span><br><span class="line">--address                     绑定到特定的地址</span><br><span class="line">--config=FILE             指定其他的配置文件，不使用默认的rsyncd.conf文件</span><br><span class="line">--port=PORT              指定其他的rsync服务端口</span><br><span class="line">--blocking-io               对远程shell使用阻塞IO</span><br><span class="line">-stats                           给出某些文件的传输状态</span><br><span class="line">--progress                   在传输时现实传输过程</span><br><span class="line">--log-format=formAT  指定日志文件格式</span><br><span class="line">--password-file=FILE 从FILE中得到密码</span><br><span class="line">--bwlimit=KBPS         限制I/O带宽，KBytes per second</span><br><span class="line">-h, --help                    显示帮助信息</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/10/20/keepalived+Nginx%E5%8F%8C%E4%B8%BB%E9%85%8D%E7%BD%AE/" rel="prev" title="keepalived+Nginx双主配置">
+      <i class="fa fa-chevron-left"></i> keepalived+Nginx双主配置
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/10/20/Linux%E5%AE%89%E8%A3%85Redis/" rel="next" title="Linux安装Redis3">
+      Linux安装Redis3 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#rsync-%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">rsync 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="nav-number">2.</span> <span class="nav-text">同步文件夹</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#rsync-%E5%8F%82%E6%95%B0"><span class="nav-number">3.</span> <span class="nav-text">rsync 参数</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">大道自然</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">大道自然</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
