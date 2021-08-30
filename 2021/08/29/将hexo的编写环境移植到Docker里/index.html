@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"51liveup.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="将Hexo的编写环境放到Docker里">
+  <meta name="description" content="Hexo 使用的nodejs、npm 最近的版本升级非常快，而且版本依赖也很不稳定，一直想把用Hexo 写博客的环境固化到Docker里，在任何地方只要把博客的源文件拉下来，映射到docker里就能写、能编译、能发布。 今天就想花点时间把它搞定，没想到花了大约一整天的时间。先出完整的解决方法，后面再分析遇到的问题。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="将Hexo的编写环境放到Docker里">
 <meta property="og:url" content="http://51liveup.cn/2021/08/29/%E5%B0%86hexo%E7%9A%84%E7%BC%96%E5%86%99%E7%8E%AF%E5%A2%83%E7%A7%BB%E6%A4%8D%E5%88%B0Docker%E9%87%8C/index.html">
 <meta property="og:site_name" content="快乐地生活">
-<meta property="og:description" content="将Hexo的编写环境放到Docker里">
+<meta property="og:description" content="Hexo 使用的nodejs、npm 最近的版本升级非常快，而且版本依赖也很不稳定，一直想把用Hexo 写博客的环境固化到Docker里，在任何地方只要把博客的源文件拉下来，映射到docker里就能写、能编译、能发布。 今天就想花点时间把它搞定，没想到花了大约一整天的时间。先出完整的解决方法，后面再分析遇到的问题。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-08-29T03:19:40.000Z">
-<meta property="article:modified_time" content="2021-08-29T11:41:30.416Z">
+<meta property="article:modified_time" content="2021-08-29T12:58:48.686Z">
 <meta property="article:author" content="大道自然">
 <meta name="twitter:card" content="summary">
 
@@ -194,7 +194,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-08-29 11:19:40 / 修改时间：19:41:30" itemprop="dateCreated datePublished" datetime="2021-08-29T11:19:40+08:00">2021-08-29</time>
+              <time title="创建时间：2021-08-29 11:19:40 / 修改时间：20:58:48" itemprop="dateCreated datePublished" datetime="2021-08-29T11:19:40+08:00">2021-08-29</time>
             </span>
 
           
@@ -208,7 +208,51 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="将Hexo的编写环境放到Docker里"><a href="#将Hexo的编写环境放到Docker里" class="headerlink" title="将Hexo的编写环境放到Docker里"></a>将Hexo的编写环境放到Docker里</h1>
+        <p>Hexo 使用的nodejs、npm 最近的版本升级非常快，而且版本依赖也很不稳定，一直想把用Hexo 写博客的环境固化到Docker里，在任何地方只要把博客的源文件拉下来，映射到docker里就能写、能编译、能发布。</p>
+<p>今天就想花点时间把它搞定，没想到花了大约一整天的时间。先出完整的解决方法，后面再分析遇到的问题。</p>
+<span id="more"></span>
+<h1 id="完整的解决方法"><a href="#完整的解决方法" class="headerlink" title="完整的解决方法"></a>完整的解决方法</h1><h2 id="构建docker镜像"><a href="#构建docker镜像" class="headerlink" title="构建docker镜像"></a>构建docker镜像</h2><p>dockerfile 完整内容如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">FROM node:16-buster</span><br><span class="line">LABEL maintainer=&quot;thinker&lt;156884481@qq.com&gt;&quot;</span><br><span class="line">LABEL version=&quot;1.0&quot;</span><br><span class="line"></span><br><span class="line">RUN sed -i &#x27;s#http://deb.debian.org#https://mirrors.tuna.tsinghua.edu.cn#g&#x27; /etc/apt/sources.list</span><br><span class="line">RUN apt-get update &amp;&amp; \</span><br><span class="line">    apt-get install -y gnutls-bin vim &amp;&amp; \</span><br><span class="line">    npm config set registry https://registry.npm.taobao.org --global &amp;&amp; \</span><br><span class="line">    npm config set disturl https://npm.taobao.org/dist --global &amp;&amp; \</span><br><span class="line">    npm install -g hexo-cli &amp;&amp; \</span><br><span class="line">    npm install -g hexo</span><br><span class="line">    </span><br><span class="line">RUN git config --global http.sslVerify false &amp;&amp; \</span><br><span class="line">    git config --global http.postBuffer 9048576000</span><br><span class="line">#    git config --global user.email &quot;156884481@qq.com&quot; &amp;&amp; \</span><br><span class="line">#    git config --global user.name &quot;thinker&quot;</span><br><span class="line"></span><br><span class="line">WORKDIR /data</span><br><span class="line"></span><br><span class="line">ENTRYPOINT bash</span><br></pre></td></tr></table></figure>
+<p>dockerfile 还是比较简单的，基于node官方的镜像，安装hexo，然后设置工作目录为/data，使用了清华的源来安装软件包，其中 gnutls-bin 这个包是关键，后面细说。</p>
+<p>然后在dockefile同级目录下执行构建镜像的命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t node-hexo:16-buster .</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">blog on  master</span><br><span class="line">❯ docker images |grep node-hexo</span><br><span class="line">node-hexo                16-buster   953e168263a7   43 minutes ago   937MB</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h2><p>在运行容器时将blog 的源码挂载到/data 目录下，然后在容器里进行编写md 和在外面（宿主机）编写md都可以，在容器里进行编译和发布。</p>
+<h3 id="运行容器，挂载源码"><a href="#运行容器，挂载源码" class="headerlink" title="运行容器，挂载源码"></a>运行容器，挂载源码</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it -v /blog:/data -p 4000:4000  node-hexo:16-buster</span><br></pre></td></tr></table></figure>
+
+<p>在容器内的/data/blog 目录可以看到博客的源码，如果是新建的博客可以参照hexo的使用文档。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">root@8af85682a9e5:/data/blog# ls -l</span><br><span class="line">total 1092</span><br><span class="line">-rw-r--r--   1 root root     13 Aug 29 11:12 README.md</span><br><span class="line">-rw-r--r--   1 root root      0 Aug 28 13:42 _config.landscape.yml</span><br><span class="line">-rw-r--r--   1 root root   2860 Aug 29 11:45 _config.yml</span><br><span class="line">-rw-r--r--   1 root root 600204 Aug 29 12:28 db.json</span><br><span class="line">drwxr-xr-x 342 root root  10944 Aug 29 01:11 node_modules</span><br><span class="line">-rw-r--r--   1 root root 327974 Aug 29 01:12 package-lock.json</span><br><span class="line">-rw-r--r--   1 root root    688 Aug 29 01:12 package.json</span><br><span class="line">drwxr-xr-x  19 root root    608 Aug 29 11:41 public</span><br><span class="line">drwxr-xr-x   5 root root    160 Aug 28 13:42 scaffolds</span><br><span class="line">drwxr-xr-x   9 root root    288 Aug 29 01:01 source</span><br><span class="line">drwxr-xr-x   5 root root    160 Aug 29 00:31 themes</span><br><span class="line">-rw-r--r--   1 root root 113211 Aug 29 01:12 yarn.lock</span><br></pre></td></tr></table></figure>
+<p>执行下面的命令可以在本地启动代理 ，随时查看正在编写的博客内容</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo s </span><br></pre></td></tr></table></figure>
+
+<p>编写完后，执行下面命令进行发布</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo d</span><br></pre></td></tr></table></figure>
+
+<p>发布的时候要注意_config.yml里面delpoy的配置，配置如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># Deployment</span><br><span class="line">## Docs: https://hexo.io/docs/one-command-deployment</span><br><span class="line">deploy:</span><br><span class="line">  - type: git</span><br><span class="line">    repo: https://[这里是在github上生成的一个key,方法参见文章结尾]@github.com/iamlibo/iamlibo.github.io.git</span><br></pre></td></tr></table></figure>
+
+<p>deploy是hexo的一个插件，<a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo-deployer-git">使用方法参见官网</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+
+<p>这样编写、预览、发布的整体的流程就跑通了，源代码在宿主机中管理，编译环境在docker中。</p>
+<h1 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h1><h2 id="1、-使用的Node的镜像版本低，会导致访问github出错"><a href="#1、-使用的Node的镜像版本低，会导致访问github出错" class="headerlink" title="1、 使用的Node的镜像版本低，会导致访问github出错"></a>1、 使用的Node的镜像版本低，会导致访问github出错</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">unable to access &#x27;https://github.com/iamlibo/iamlibo.github.io.git/&#x27;: gnutls_handshake() failed: The TLS connection was non-properly terminated.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这个问题网上也有很多的资料，主要原因是git 使用的SSL 依赖包变化导致的，网上的方法多数重新编译git 使用open-ssl 然后再替换原有的程序包。在构建docker 镜像的时候去重新编译git 还是挺复杂的，缺少的依赖太多。</p>
+<p>这个问题的解决方法如下，在dockerfile 中都有体现</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">apt-get install gnutls-bin</span><br><span class="line">git config --global http.sslVerify false</span><br><span class="line">git config --global http.postBuffer 1048576000</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2、是因为github提交要求把密码换成token，提示信息大概是这样："><a href="#2、是因为github提交要求把密码换成token，提示信息大概是这样：" class="headerlink" title="2、是因为github提交要求把密码换成token，提示信息大概是这样："></a>2、是因为github提交要求把密码换成token，提示信息大概是这样：</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">remote: Support for password authentication was removed on August 13, 2021. Please use a personal access token instead.</span><br><span class="line">remote: Please see https://github.blog/2020-12-15-token-authentication-requirements-for-git-operations/ for more information.</span><br><span class="line">fatal: unable to access &#x27;https://github.com/iamlibo/iamlibo.github.io.git/&#x27;: The requested URL returned error: 403</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>这个问题本来应该挺简单，但是我没有仔细看，把解决的思路搞错了，以为是要自己生成一个ssh-key 上传到github 的Deploy keys 中去，在这块浪费了好长时间。后来在github 上生成一个key ，做为提交时候的密码就可以了。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_41010198/article/details/119698015">在github上配置token的方法,github开发人员在七夕搞事情：remote: Support for password authentication was removed on August 13, 2021</a></p>
+</blockquote>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.codeleading.com/article/35945768595/">Git Clone错误解决：GnuTLS recv error (-110): The TLS connection was non-properly terminated</a></p>
+</blockquote>
+
     </div>
 
     
@@ -285,7 +329,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%86Hexo%E7%9A%84%E7%BC%96%E5%86%99%E7%8E%AF%E5%A2%83%E6%94%BE%E5%88%B0Docker%E9%87%8C"><span class="nav-number">1.</span> <span class="nav-text">将Hexo的编写环境放到Docker里</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">完整的解决方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BAdocker%E9%95%9C%E5%83%8F"><span class="nav-number">1.1.</span> <span class="nav-text">构建docker镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C"><span class="nav-number">1.2.</span> <span class="nav-text">运行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E5%AE%B9%E5%99%A8%EF%BC%8C%E6%8C%82%E8%BD%BD%E6%BA%90%E7%A0%81"><span class="nav-number">1.2.1.</span> <span class="nav-text">运行容器，挂载源码</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">遇到的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81-%E4%BD%BF%E7%94%A8%E7%9A%84Node%E7%9A%84%E9%95%9C%E5%83%8F%E7%89%88%E6%9C%AC%E4%BD%8E%EF%BC%8C%E4%BC%9A%E5%AF%BC%E8%87%B4%E8%AE%BF%E9%97%AEgithub%E5%87%BA%E9%94%99"><span class="nav-number">2.1.</span> <span class="nav-text">1、 使用的Node的镜像版本低，会导致访问github出错</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81%E6%98%AF%E5%9B%A0%E4%B8%BAgithub%E6%8F%90%E4%BA%A4%E8%A6%81%E6%B1%82%E6%8A%8A%E5%AF%86%E7%A0%81%E6%8D%A2%E6%88%90token%EF%BC%8C%E6%8F%90%E7%A4%BA%E4%BF%A1%E6%81%AF%E5%A4%A7%E6%A6%82%E6%98%AF%E8%BF%99%E6%A0%B7%EF%BC%9A"><span class="nav-number">2.2.</span> <span class="nav-text">2、是因为github提交要求把密码换成token，提示信息大概是这样：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">3.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
