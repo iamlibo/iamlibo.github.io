@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN,zh-Hans,default">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"51liveup.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Kong介绍Kong是一款基于Nginx_Lua模块写的高可用网关API，通过前置的负载均衡配置把请求均匀地分发到各个Server，来应对大批量的网络请求。基于Nginx 特性，Kong本身也非常容易地扩展到多个服务器上。 Kong主要有三个组件： Kong Server ：基于nginx的服务器，用来接收API请求。 Apache Cassandra&#x2F;PostgreSQL ：用来存储操作数据。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kong 网关入门">
+<meta property="og:url" content="http://51liveup.cn/2019/06/19/Kong/index.html">
+<meta property="og:site_name" content="快乐地生活">
+<meta property="og:description" content="Kong介绍Kong是一款基于Nginx_Lua模块写的高可用网关API，通过前置的负载均衡配置把请求均匀地分发到各个Server，来应对大批量的网络请求。基于Nginx 特性，Kong本身也非常容易地扩展到多个服务器上。 Kong主要有三个组件： Kong Server ：基于nginx的服务器，用来接收API请求。 Apache Cassandra&#x2F;PostgreSQL ：用来存储操作数据。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e5ffa12161ab~tplv-t2oaga2asx-image.image">
+<meta property="og:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e601f71a98e7~tplv-t2oaga2asx-image.image">
+<meta property="og:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e6068e908584~tplv-t2oaga2asx-image.image">
+<meta property="og:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e60356026ac9~tplv-t2oaga2asx-image.image">
+<meta property="og:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e5fff63cf853~tplv-t2oaga2asx-image.image">
+<meta property="og:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e6068e8bd3b7~tplv-t2oaga2asx-image.image">
+<meta property="og:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e60022220239~tplv-t2oaga2asx-image.image">
+<meta property="article:published_time" content="2019-06-19T00:35:21.000Z">
+<meta property="article:modified_time" content="2021-11-21T00:40:42.359Z">
+<meta property="article:author" content="大道自然">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e5ffa12161ab~tplv-t2oaga2asx-image.image">
+
+<link rel="canonical" href="http://51liveup.cn/2019/06/19/Kong/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Kong 网关入门 | 快乐地生活</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">快乐地生活</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://51liveup.cn/2019/06/19/Kong/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="大道自然">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="快乐地生活">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kong 网关入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-06-19 08:35:21" itemprop="dateCreated datePublished" datetime="2019-06-19T08:35:21+08:00">2019-06-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-21 08:40:42" itemprop="dateModified" datetime="2021-11-21T08:40:42+08:00">2021-11-21</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Kong介绍"><a href="#Kong介绍" class="headerlink" title="Kong介绍"></a>Kong介绍</h1><p>Kong是一款基于Nginx_Lua模块写的高可用网关API，通过前置的负载均衡配置把请求均匀地分发到各个Server，来应对大批量的网络请求。基于Nginx 特性，Kong本身也非常容易地扩展到多个服务器上。</p>
+<p>Kong主要有三个组件：</p>
+<pre><code>Kong Server ：基于nginx的服务器，用来接收API请求。
+Apache Cassandra/PostgreSQL ：用来存储操作数据。
+Kong dashboard：官方推荐UI管理工具，也可以使用 restfull 方式 管理admin api。
+</code></pre>
+<span id="more"></span>
+<p>Kong 工作方式</p>
+<p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e5ffa12161ab~tplv-t2oaga2asx-image.image"></p>
+<p>Kong基本概念:</p>
+<pre><code>客户端：指下游客户向Kong的代理端口发出请求。
+服务：服务实体，是对自己的每个上游服务的抽象。客户请求被转发到该服务。
+路由：路由是进入Kong的入口点，并为要匹配的请求定义规则，并路由到给定的Service。服务和路由之间的关系是一对多的关系。
+插件：它是在代理生命周期中运行的业务逻辑。可以通过ADMIN API配置插件 - 全局（所有传入流量）或特定的路由和服务。
+用户：是调用API 服务时身份认证的凭据
+</code></pre>
+<p>更多内容参考<a target="_blank" rel="noopener" href="https://konghq.com/kong/">官网</a> <a target="_blank" rel="noopener" href="https://konghq.com/kong/">https://konghq.com/kong/</a></p>
+<h1 id="安装配置"><a href="#安装配置" class="headerlink" title="安装配置"></a>安装配置</h1><p>本次基于docker 的方式进行安装。Docker的安装请参照 <a target="_blank" rel="noopener" href="https://blog.51liveup.cn/2019/05/08/Docker%E5%AE%9E%E8%B7%B5%E4%B8%80%20%E5%AE%89%E8%A3%85Docker/">Docker实践一 Docker安装</a></p>
+<h2 id="1、在Docker中建立虚拟的网络："><a href="#1、在Docker中建立虚拟的网络：" class="headerlink" title="1、在Docker中建立虚拟的网络："></a>1、在Docker中建立虚拟的网络：</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker network create kong-net</span><br></pre></td></tr></table></figure>
+
+<p>后续的应用及数据库都使用这个虚拟网络。</p>
+<h2 id="2、编写docker-compose-yaml"><a href="#2、编写docker-compose-yaml" class="headerlink" title="2、编写docker-compose.yaml"></a>2、编写docker-compose.yaml</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">version: &quot;3.7&quot;</span><br><span class="line">services: </span><br><span class="line">  kong:</span><br><span class="line">    # 镜像版本，目前最新</span><br><span class="line">    image: kong:1.1.2</span><br><span class="line">    environment:</span><br><span class="line">    # 数据持久化方式，使用postgres数据库</span><br><span class="line">     - &quot;KONG_DATABASE=postgres&quot;</span><br><span class="line">    # 数据库容器名称,Kong连接数据时使用些名称</span><br><span class="line">     - &quot;KONG_PG_HOST=kong-database&quot;</span><br><span class="line">    # 数据库名称</span><br><span class="line">     - &quot;KONG_CASSANDRA_CONTACT_POINTS=kong-database&quot;</span><br><span class="line">    # 日志记录目录</span><br><span class="line">     - &quot;KONG_PROXY_ACCESS_LOG=/dev/stdout&quot;</span><br><span class="line">     - &quot;KONG_ADMIN_ACCESS_LOG=/dev/stdout&quot;</span><br><span class="line">     - &quot;KONG_PROXY_ERROR_LOG=/dev/stderr&quot;</span><br><span class="line">     - &quot;KONG_ADMIN_ERROR_LOG=/dev/stderr&quot;</span><br><span class="line">    # 暴露的端口</span><br><span class="line">     - &quot;KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl&quot;</span><br><span class="line">    ports:</span><br><span class="line">     - 8000:8000</span><br><span class="line">     - 8443:8443</span><br><span class="line">     - 8001:8001</span><br><span class="line">     - 8444:8444</span><br><span class="line">    # 使用docker网络</span><br><span class="line">    networks:</span><br><span class="line">     - kong-net</span><br><span class="line"> </span><br><span class="line">    # 依赖数据库服务</span><br><span class="line">    depends_on:</span><br><span class="line">      - kong-database</span><br><span class="line"># kong 管理界面</span><br><span class="line">  konga:</span><br><span class="line">    image: pantsel/konga</span><br><span class="line">    environment:</span><br><span class="line">     - &quot;TOKEN_SECRET=51liveup.cn&quot;</span><br><span class="line">     - &quot;NODE_ENV=production&quot;</span><br><span class="line">    ports:</span><br><span class="line">     - 8080:1337</span><br><span class="line">    networks:</span><br><span class="line">     - kong-net</span><br><span class="line"> </span><br><span class="line">    depends_on:</span><br><span class="line">      - kong-database</span><br><span class="line">      - </span><br><span class="line"># 数据库服务</span><br><span class="line">  kong-database:</span><br><span class="line">    image: postgres:9.6</span><br><span class="line">    ports:</span><br><span class="line">      - &quot;5432:5432&quot;</span><br><span class="line">    environment:</span><br><span class="line">    # 访问数据库的用户</span><br><span class="line">      - POSTGRES_USER=kong</span><br><span class="line">      - POSTGRES_DB=kong</span><br><span class="line">    networks:</span><br><span class="line">      - kong-net</span><br><span class="line">    volumes:</span><br><span class="line">    # 同步时间</span><br><span class="line">      - /etc/localtime:/etc/localtime:ro</span><br><span class="line">    # 数据库持久化目录</span><br><span class="line">      - /data/data/postgresql:/var/lib/postgresql/data</span><br><span class="line"> </span><br><span class="line">networks:</span><br><span class="line">  kong-net:</span><br><span class="line">    external: true</span><br></pre></td></tr></table></figure>
+
+<p>使用docker-compose up 命令启动服务。会发现启动时报数据库错误，这是因为kong 使用的postgres 数据还需要进行初始化才能使用。</p>
+<h2 id="3、初始化数据库"><a href="#3、初始化数据库" class="headerlink" title="3、初始化数据库"></a>3、初始化数据库</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">docker run --rm \</span><br><span class="line">     --network=kong-net \</span><br><span class="line">     -e &quot;KONG_DATABASE=postgres&quot; \</span><br><span class="line">     -e &quot;KONG_PG_HOST=kong-database&quot; \</span><br><span class="line">     -e &quot;KONG_CASSANDRA_CONTACT_POINTS=kong-database&quot; \</span><br><span class="line">     kong:latest kong migrations bootstrap</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>一定要在创建数据库容器之后，并且保持数据库的Docker容器在运行状态，再执行初始化数据库，数据库初始化成功后，再次使用docker-compose up -d 启动服务就可以了。</p>
+<h1 id="验证安装"><a href="#验证安装" class="headerlink" title="验证安装"></a>验证安装</h1><p>在宿主机上执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -i http://localhost:8001/</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>返回下面内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Date: Mon, 17 Jun 2019 02:43:33 GMT</span><br><span class="line">Content-Type: application/json; charset=utf-8</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Access-Control-Allow-Origin: *</span><br><span class="line">Server: kong/1.1.2</span><br><span class="line">Content-Length: 5860</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">....</span><br></pre></td></tr></table></figure>
+
+<p>表示安装正确。可以正常使用Kong了。</p>
+<p>访问 <a target="_blank" rel="noopener" href="http://localhost:8080/">http://localhost:8080</a> 访问Konga 的管理界面，第一次登录使用需要创建管理员帐号和密码。</p>
+<p>更多内容参照<a target="_blank" rel="noopener" href="https://docs.konghq.com/install/docker/?_ga=2.103590403.2004525690.1560737552-611288076.1552780684">官网的安装文档</a>。</p>
+<h1 id="配置一个实例"><a href="#配置一个实例" class="headerlink" title="配置一个实例"></a>配置一个实例</h1><p>配置一个访问 <a target="_blank" rel="noopener" href="https://www.baidu.com/">https://www.baidu.com/</a> 的接口API，实际使用时会对接后端的业务数据接口地址。</p>
+<h2 id="1、创建服务"><a href="#1、创建服务" class="headerlink" title="1、创建服务"></a>1、创建服务</h2><p>服务是上游服务的抽象，可以是一个应用，或者具体某个接口。</p>
+<p>命令行方式创建服务：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl -i -X POST \</span><br><span class="line">--url http://51liveup.cn:8001/services/ \</span><br><span class="line">--data &#x27;name=baidu-service&#x27; \</span><br><span class="line">--data &#x27;url=https://www.baidu.com/&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>Konga 的管理界面创建和查看服务如下图<br><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e601f71a98e7~tplv-t2oaga2asx-image.image"></p>
+<h2 id="2、创建路由"><a href="#2、创建路由" class="headerlink" title="2、创建路由"></a>2、创建路由</h2><p>在刚才创建的baidu-service的服务上创建路由</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl -i -X POST \</span><br><span class="line">--url http://51liveup.cn:8001/services/baidu-service/routes \</span><br><span class="line">--data &#x27;hosts[]=baidu.com&#x27; \</span><br><span class="line">--data &#x27;paths[]=/api/baidu&#x27;</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e6068e908584~tplv-t2oaga2asx-image.image"><br><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e60356026ac9~tplv-t2oaga2asx-image.image"></p>
+<h2 id="3、通过Postman-访问数据"><a href="#3、通过Postman-访问数据" class="headerlink" title="3、通过Postman 访问数据"></a>3、通过Postman 访问数据</h2><p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e5fff63cf853~tplv-t2oaga2asx-image.image"></p>
+<p>注意，如果Api暴露的地址与前面Host定义的地址（baidu.com）不一致，就需要在请求的Headers里面加入参数Host=baidu.com</p>
+<h1 id="JWT-插件的使用"><a href="#JWT-插件的使用" class="headerlink" title="JWT 插件的使用"></a>JWT 插件的使用</h1><p>上面的配置，只要知道Router的地址，就可以访问获取数据，我们要把API加入身份认证。如果API面对不是具体用户，而是其他的系统，可以使用JWT来进行系统间身份认证，使用Kong JWT插件就可能完成这功能。JWT 插件要在对应的Router上进行启用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -X POST http://51liveup.cn:8001/routes/fee36521-e549-410f-8986-9fbba02219c1/plugins \</span><br><span class="line">    --data &quot;name=jwt&quot;</span><br></pre></td></tr></table></figure>
+<p>fee36521-e549-410f-8986-9fbba02219c1 是创建的router的ID。<br><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e6068e8bd3b7~tplv-t2oaga2asx-image.image"></p>
+<p>这时再通过Postman 访问上面的接口就会提示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;message&quot;: &quot;Unauthorized&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端要访问需要提供JWT的认证信息才可以。</p>
+<h2 id="创建用户"><a href="#创建用户" class="headerlink" title="创建用户"></a>创建用户</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -i -X POST \</span><br><span class="line">--url http://51liveup.cn:8001/consumers/  \</span><br><span class="line">--data &quot;username=baiduuser&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="用户生成JWT凭证"><a href="#用户生成JWT凭证" class="headerlink" title="用户生成JWT凭证"></a>用户生成JWT凭证</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -i -X POST \</span><br><span class="line">--url http://51liveup.cn:8001/consumers/baiduuser/jwt \</span><br><span class="line">--header &quot;Content-Type: application/x-www-form-urlencoded&quot;</span><br></pre></td></tr></table></figure>
+
+<p>返回凭证信息，也可以通过 get 方法查询凭证信息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;rsa_public_key&quot;: null,</span><br><span class="line">    &quot;created_at&quot;: 1560723665,</span><br><span class="line">    &quot;consumer&quot;: &#123;</span><br><span class="line">        &quot;id&quot;: &quot;8bb94f49-22a6-4d77-9a64-21f13adc0342&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;id&quot;: &quot;a110d234-6dc1-4443-9da2-21acddc66e09&quot;,</span><br><span class="line">    &quot;algorithm&quot;: &quot;HS256&quot;,</span><br><span class="line">    &quot;secret&quot;: &quot;lCe8Lbb7F0KtLccaBcBnOvYg76V7wmQx&quot;,</span><br><span class="line">    &quot;key&quot;: &quot;7yQoUdF0aFUC9N593uLQLbqL7RSPj2qM&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用key和secret在 <a target="_blank" rel="noopener" href="https://jwt.io/">https://jwt.io/</a> 可以生成jwt 凭证信息.<br><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/6/19/16b6e60022220239~tplv-t2oaga2asx-image.image"></p>
+<p>再通过postman 访问，就可以看到数据了。</p>
+<p>下面是通过Java代码访问数据的例子，<strong>不适用</strong>上面配置的baidu的接口。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">import io.jsonwebtoken.Jwts;</span><br><span class="line">import io.jsonwebtoken.SignatureAlgorithm;</span><br><span class="line">import okhttp3.*;</span><br><span class="line"> </span><br><span class="line">import java.io.IOException;</span><br><span class="line">import java.nio.charset.Charset;</span><br><span class="line">import java.util.Base64;</span><br><span class="line"> </span><br><span class="line">public class Example &#123;</span><br><span class="line"> </span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Example example = new Example();</span><br><span class="line">        example.get(&quot;http://51liveup.cn:8000/api/xxxx/1&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    public void get(String url) &#123;</span><br><span class="line">        OkHttpClient mOkHttpClient = new OkHttpClient();</span><br><span class="line">        Request request = createBuilder().url(url).post(FormBody.create(MediaType.parse(&quot;application/json; charset=utf-8&quot;), &quot;&#123;&#125;&quot;)).build();</span><br><span class="line">        mOkHttpClient.newCall(request).enqueue(new Callback() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void onFailure(Call call, IOException e) &#123;</span><br><span class="line">                System.out.println(&quot;failure : \r\n&quot; + e);</span><br><span class="line">            &#125;</span><br><span class="line"> </span><br><span class="line">            @Override</span><br><span class="line">            public void onResponse(Call call, Response response) throws IOException &#123;</span><br><span class="line">                System.out.println(&quot;response:&quot;);</span><br><span class="line">                System.out.println(response.body().string());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    private Request.Builder createBuilder() &#123;</span><br><span class="line">        Request.Builder builder = new Request.Builder();</span><br><span class="line">        builder.addHeader(&quot;host&quot;, &quot;51liveup.cn&quot;);</span><br><span class="line">        builder.addHeader(&quot;Authorization&quot;, &quot;Bearer &quot; + generateJwt());</span><br><span class="line">        return builder;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    private String generateJwt() &#123;</span><br><span class="line">        String jwt = Jwts.builder()</span><br><span class="line">                .setHeaderParam(&quot;typ&quot;, &quot;JWT&quot;)</span><br><span class="line">                .setHeaderParam(&quot;alg&quot;, &quot;HS256&quot;)</span><br><span class="line">                .setIssuer(&quot;7yQoUdF0aFUC9N593uLQLbqL7RSPj2qM&quot;)  // key</span><br><span class="line">                .signWith(SignatureAlgorithm.HS256, Base64.getEncoder().encodeToString(&quot;lCe8Lbb7F0KtLccaBcBnOvYg76V7wmQx&quot;.getBytes(Charset.forName(&quot;utf-8&quot;))))</span><br><span class="line">                .compact();</span><br><span class="line">        System.out.println(&quot;jwt:&quot; + jwt);</span><br><span class="line">        return jwt;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="ACL-插件的使用"><a href="#ACL-插件的使用" class="headerlink" title="ACL 插件的使用"></a>ACL 插件的使用</h1><p>JWT插件可以保护API能够被受信用户访问，但不能区别哪个用户能够访问哪个API，即接口权限问题，我们使用ACL 插件解决这个问题.</p>
+<p>在上面定义好的路由上启用acl 插件，指定白名单，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl -i -X POST \</span><br><span class="line">--url http://51liveup.cn:8001/routes/afb8bfbd-977e-464f-8c94-05d6c5c98429/plugins \</span><br><span class="line">--data &quot;name=acl&quot;  \</span><br><span class="line">--data &quot;config.whitelist=baiduGroup&quot;</span><br></pre></td></tr></table></figure>
+<p>此时再访问api，会提示不能访问这个服务。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;message&quot;: &quot;You cannot consume this service&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>只需将baiduuser这个用户关联到白名单内的baiduGroup组里即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -i -X POST \</span><br><span class="line">--url http://localhost:8001/consumers/tianqiuser/acls \</span><br><span class="line">--data &quot;group=tianqi&quot;</span><br></pre></td></tr></table></figure>
+
+<p>再次访问接口，能正常返回数据。</p>
+<p>现在就可以对网关暴露的接口进行身份认证和权限控制了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/01/26/Spring-Boot-%E7%AC%94%E8%AE%B0/" rel="prev" title="Spring Boot 笔记">
+      <i class="fa fa-chevron-left"></i> Spring Boot 笔记
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/16/Kubernetes%E7%8E%AF%E5%A2%83%E4%B8%AD%E4%B8%8A%E4%BC%A0%E9%99%84%E4%BB%B6%E6%85%A2%E7%9A%84%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" rel="next" title="Kubernetes环境中上传附件慢的问题解决">
+      Kubernetes环境中上传附件慢的问题解决 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Kong%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">Kong介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">安装配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81%E5%9C%A8Docker%E4%B8%AD%E5%BB%BA%E7%AB%8B%E8%99%9A%E6%8B%9F%E7%9A%84%E7%BD%91%E7%BB%9C%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">1、在Docker中建立虚拟的网络：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81%E7%BC%96%E5%86%99docker-compose-yaml"><span class="nav-number">2.2.</span> <span class="nav-text">2、编写docker-compose.yaml</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E3%80%81%E5%88%9D%E5%A7%8B%E5%8C%96%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">2.3.</span> <span class="nav-text">3、初始化数据库</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E5%AE%89%E8%A3%85"><span class="nav-number">3.</span> <span class="nav-text">验证安装</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%B8%80%E4%B8%AA%E5%AE%9E%E4%BE%8B"><span class="nav-number">4.</span> <span class="nav-text">配置一个实例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81%E5%88%9B%E5%BB%BA%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.1.</span> <span class="nav-text">1、创建服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81%E5%88%9B%E5%BB%BA%E8%B7%AF%E7%94%B1"><span class="nav-number">4.2.</span> <span class="nav-text">2、创建路由</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E3%80%81%E9%80%9A%E8%BF%87Postman-%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE"><span class="nav-number">4.3.</span> <span class="nav-text">3、通过Postman 访问数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JWT-%E6%8F%92%E4%BB%B6%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">5.</span> <span class="nav-text">JWT 插件的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%94%A8%E6%88%B7"><span class="nav-number">5.1.</span> <span class="nav-text">创建用户</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E7%94%9F%E6%88%90JWT%E5%87%AD%E8%AF%81"><span class="nav-number">5.2.</span> <span class="nav-text">用户生成JWT凭证</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ACL-%E6%8F%92%E4%BB%B6%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">6.</span> <span class="nav-text">ACL 插件的使用</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">大道自然</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">大道自然</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
