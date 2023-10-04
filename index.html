@@ -165,6 +165,129 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN,zh-Hans,default">
+    <link itemprop="mainEntityOfPage" href="http://51liveup.cn/2023/10/04/SpringBoot3.1%E4%BD%BF%E7%94%A8HATEOAS%E5%A2%9E%E5%BC%BAAPI%E7%9A%84%E6%B4%BB%E5%8A%9B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="大道自然">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="人生是一场修行">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/10/04/SpringBoot3.1%E4%BD%BF%E7%94%A8HATEOAS%E5%A2%9E%E5%BC%BAAPI%E7%9A%84%E6%B4%BB%E5%8A%9B/" class="post-title-link" itemprop="url">SpringBoot3.1使用HATEOAS增强API的活力</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-10-04 16:54:08 / 修改时间：17:02:00" itemprop="dateCreated datePublished" datetime="2023-10-04T16:54:08+08:00">2023-10-04</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>示例项目<br>JDK 17<br>SpringBoot 3.1.4 (当前最新版本)<br>Spring HATEOAS 2.1.2<br>Kotlin 1.8.22</p>
+</blockquote>
+<h1 id="初始化项目"><a href="#初始化项目" class="headerlink" title="初始化项目"></a>初始化项目</h1><p>使用<a target="_blank" rel="noopener" href="https://start.spring.io/">Spring Initializr</a> 创建示例项目，使用Gradle管理项目，语言选择Kotlin，JDK 17，依赖选择Spring Web 、Spring HATEOAS ，其他都会自动引入。</p>
+<p>生成的示例项目的build.gradle内容如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.jetbrains.kotlin.gradle.tasks.KotlinCompile  </span><br><span class="line">  </span><br><span class="line">plugins &#123;  </span><br><span class="line">    id <span class="string">&#x27;org.springframework.boot&#x27;</span> version <span class="string">&#x27;3.1.4&#x27;</span>  </span><br><span class="line">    id <span class="string">&#x27;io.spring.dependency-management&#x27;</span> version <span class="string">&#x27;1.1.3&#x27;</span>  </span><br><span class="line">    id <span class="string">&#x27;org.jetbrains.kotlin.jvm&#x27;</span> version <span class="string">&#x27;1.8.22&#x27;</span>  </span><br><span class="line">    id <span class="string">&#x27;org.jetbrains.kotlin.plugin.spring&#x27;</span> version <span class="string">&#x27;1.8.22&#x27;</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">group = <span class="string">&#x27;cn.myplus.examples&#x27;</span>  </span><br><span class="line">version = <span class="string">&#x27;0.0.1-SNAPSHOT&#x27;</span>  </span><br><span class="line">  </span><br><span class="line">java &#123;  </span><br><span class="line">    sourceCompatibility = <span class="string">&#x27;17&#x27;</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">repositories &#123;  </span><br><span class="line">    mavenCentral()  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">dependencies &#123;  </span><br><span class="line">    implementation <span class="string">&#x27;org.springframework.boot:spring-boot-starter-hateoas&#x27;</span>  </span><br><span class="line">    implementation <span class="string">&#x27;org.springframework.boot:spring-boot-starter-web&#x27;</span>  </span><br><span class="line">    implementation <span class="string">&#x27;com.fasterxml.jackson.module:jackson-module-kotlin&#x27;</span>  </span><br><span class="line">    implementation <span class="string">&#x27;org.jetbrains.kotlin:kotlin-reflect&#x27;</span>  </span><br><span class="line">    testImplementation <span class="string">&#x27;org.springframework.boot:spring-boot-starter-test&#x27;</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">tasks.withType(KotlinCompile) &#123;  </span><br><span class="line">    kotlinOptions &#123;  </span><br><span class="line">       freeCompilerArgs += <span class="string">&#x27;-Xjsr305=strict&#x27;</span>  </span><br><span class="line">       jvmTarget = <span class="string">&#x27;17&#x27;</span>  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">tasks.named(<span class="string">&#x27;test&#x27;</span>) &#123;  </span><br><span class="line">    useJUnitPlatform()  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面代码中引入了Log4j2做为日志输出框架，所以把spring-boot-starter-logging 做全局排除了。</p>
+<p>使用Ideaj 打开项目后，会自动进行 load gradle 项目，并下载依赖包。如果下载比较慢，可以参考<a href="#Gradle%E5%9B%BD%E5%86%85%E5%8A%A0%E9%80%9F">Gradle 国内加速</a></p>
+<h1 id="编写代码"><a href="#编写代码" class="headerlink" title="编写代码"></a>编写代码</h1><h2 id="实体类"><a href="#实体类" class="headerlink" title="实体类"></a>实体类</h2><p>我们使用User对象做为示例，只有4个属性，id、name、loginName是必填属性，放到构造方法中，phone 是非必填属性，可以放到类中。在本示例项目不涉及保存数据库等操作。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cn.myplus.examples.springboothateoas.user  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> java.io.Serializable  </span><br><span class="line">  </span><br><span class="line"><span class="comment">/**  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@project</span> springboot-hateoas  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@description</span> 用户信息实体类  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> libo  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2023-10-03 10:26:32  </span></span><br><span class="line"><span class="comment"> */</span><span class="keyword">data</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span></span>(<span class="keyword">val</span> id: String, <span class="keyword">val</span> name: String, <span class="keyword">val</span> loginName: String) : Serializable&#123;  </span><br><span class="line">    <span class="keyword">val</span> phone: String? = <span class="literal">null</span>  </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="Controller类"><a href="#Controller类" class="headerlink" title="Controller类"></a>Controller类</h2><p>创建UserController.kt的文件，基本的注解与Java代码编写一样。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">package</span> cn.myplus.examples.springboothateoas.user</span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger  </span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory  </span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.<span class="keyword">annotation</span>.Autowired  </span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.<span class="keyword">annotation</span>.RestController</span><br><span class="line"></span><br><span class="line"><span class="meta">@RestController</span>  </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserController</span></span>(<span class="meta">@Autowired</span> <span class="keyword">val</span> userService: UserService) &#123;  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">val</span> logger: Logger = LoggerFactory.getLogger(UserController::<span class="keyword">class</span>.java)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="获取单个对象接口"><a href="#获取单个对象接口" class="headerlink" title="获取单个对象接口"></a>获取单个对象接口</h3><p>hateoas风格的api主要是api的返回值中有相关的链接，使用者能够更容易使用。<br>在获取单个对象的api中，最常见的就是给出自身（self）的访问链接。</p>
+<p><strong>希望</strong>通过如下的请求地址</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GET http://localhost:9999/user/admin  </span><br><span class="line">Accept: application/json</span><br></pre></td></tr></table></figure>
+
+<p>返回单个对象(admin用户)的信息</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;admin&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;系统管理员&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;loginName&quot;</span>: <span class="string">&quot;admin&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;phone&quot;</span>: <span class="literal">null</span>,</span><br><span class="line">  <span class="attr">&quot;links&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;rel&quot;</span>: <span class="string">&quot;self&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;href&quot;</span>: <span class="string">&quot;http://localhost:9999/user/admin&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在UserController 中加入获取单个对象的接口</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GetMapping(<span class="meta-string">&quot;/user/&#123;id&#125;&quot;</span>)</span>  </span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getUser</span><span class="params">(<span class="meta">@PathVariable(<span class="meta-string">&quot;id&quot;</span>)</span> id: <span class="type">String</span>)</span></span>: ResponseEntity&lt;User&gt; &#123;  </span><br><span class="line">    <span class="keyword">val</span> user = getUserById(id)  </span><br><span class="line">    <span class="keyword">return</span> ResponseEntity&lt;User&gt;(user, HttpStatus.OK)  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="comment">/**  </span></span><br><span class="line"><span class="comment"> * 获取单个实体，可以在Service类中实现。  </span></span><br><span class="line"><span class="comment"> */</span>  </span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getUserById</span><span class="params">(id: <span class="type">String</span>)</span></span>: User &#123;  </span><br><span class="line">    <span class="keyword">if</span> (id.isBlank()) &#123;  </span><br><span class="line">        <span class="keyword">throw</span> IllegalArgumentException(<span class="string">&quot;查询用户,参数错误.&quot;</span>)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> User(<span class="string">&quot;admin&quot;</span>, <span class="string">&quot;系统管理员&quot;</span>, <span class="string">&quot;admin&quot;</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>访问 <a target="_blank" rel="noopener" href="http://localhost:9999/user/admin">http://localhost:9999/user/admin</a> 这个地址，返回值如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;admin&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;系统管理员&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;loginName&quot;</span>: <span class="string">&quot;admin&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;phone&quot;</span>: <span class="literal">null</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接口正常返回单个实体对象，但是没有HATEOAS 的内容，接下来我们就要加入HATEOAS的格式的返回值。</p>
+<ol>
+<li>首先创建一个UserModel类，这个类的属性与返回JSON的属性对应（多数情况下与User类属性相同，但是不推荐使用同一个类）<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cn.myplus.examples.springboothateoas.user  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> org.springframework.hateoas.RepresentationModel  </span><br><span class="line">  </span><br><span class="line"><span class="comment">/**  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@project</span> myplus5  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@description</span> 用记信息接口返回类  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> libo  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2023-10-03 15:32:58  </span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"> <span class="class"><span class="keyword">class</span> <span class="title">UserModel</span> : <span class="type">RepresentationModel</span>&lt;<span class="type">UserModel</span>&gt;</span>() &#123;  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">var</span> id: String = <span class="string">&quot;&quot;</span>  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">var</span> name: String = <span class="string">&quot;&quot;</span>  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">var</span> loginName: String = <span class="string">&quot;&quot;</span>  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">var</span> phone: String? = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>这个类继承org.springframework.hateoas.RepresentationModel类，这个类是Spring Hateoas 提供的包装links的基本model类。继承这个类就可以为模型（UserModel）增加link信息了。</p>
+<ol start="2">
+<li>修改getUser方法<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">@GetMapping(<span class="meta-string">&quot;/user/&#123;id&#125;&quot;</span>)</span>  </span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getUser</span><span class="params">(<span class="meta">@PathVariable(<span class="meta-string">&quot;id&quot;</span>)</span> id: <span class="type">String</span>)</span></span>: ResponseEntity&lt;UserModel&gt; &#123;  </span><br><span class="line">    <span class="keyword">val</span> user = getUserById(id)  </span><br><span class="line">    <span class="keyword">val</span> userModel: UserModel = UserModel()  </span><br><span class="line">    <span class="comment">//加入自身链接  </span></span><br><span class="line">    userModel.add(  </span><br><span class="line">        WebMvcLinkBuilder.linkTo(  </span><br><span class="line">            WebMvcLinkBuilder.methodOn(UserController::<span class="keyword">class</span>.java).getUser(user.id)  </span><br><span class="line">        ).withSelfRel()  </span><br><span class="line">    )  </span><br><span class="line">    <span class="comment">// 以下为属性赋值  </span></span><br><span class="line">    userModel.id = user.id  </span><br><span class="line">    userModel.name = user.name  </span><br><span class="line">    userModel.loginName = user.loginName  </span><br><span class="line">    userModel.phone = user.phone  </span><br><span class="line">    <span class="keyword">return</span> ResponseEntity&lt;UserModel&gt;(userModel, HttpStatus.OK)    </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li> getUser方法返回值由ResponseEntity(User) 改为ResponseEntity(UserModel)</li>
+<li> userModel 加入链接，是通UserController.getUser()方法自动生成链接</li>
+</ul>
+<p>再次访问 <a target="_blank" rel="noopener" href="http://localhost:9999/user/admin">http://localhost:9999/user/admin</a> 这个地址，返回值如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;admin&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;系统管理员&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;loginName&quot;</span>: <span class="string">&quot;admin&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;phone&quot;</span>: <span class="literal">null</span>,</span><br><span class="line">  <span class="attr">&quot;links&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;rel&quot;</span>: <span class="string">&quot;self&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;href&quot;</span>: <span class="string">&quot;http://localhost:9999/user/admin&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>已经加入self 的链接，只是在Controller 的返回值中加入了一些代码，其他都没变化。</p>
+<h3 id="代码优化"><a href="#代码优化" class="headerlink" title="代码优化"></a>代码优化</h3><p>Spring HATEOAS 还提供了RepresentationModelAssemblerSupport这样的模型转类，只需要继承这个抽象类就可以快速的实现模型与实体的转换操作。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cn.myplus.examples.springboothateoas.user  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> org.springframework.hateoas.CollectionModel  </span><br><span class="line"><span class="keyword">import</span> org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport  </span><br><span class="line"><span class="keyword">import</span> org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo  </span><br><span class="line"><span class="keyword">import</span> org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn  </span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Component  </span><br><span class="line">  </span><br><span class="line"><span class="comment">/**  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@project</span> springboot-hateoas  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@description</span> 用户实体与模型转换  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> libo  </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2023-10-03 18:06:58  </span></span><br><span class="line"><span class="comment"> */</span><span class="meta">@Component</span>  </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserModelAssembler</span> :  </span></span><br><span class="line"><span class="class">    <span class="type">RepresentationModelAssemblerSupport</span>&lt;<span class="type">User, UserModel</span>&gt;</span>(UserController::<span class="keyword">class</span>.java, UserModel::<span class="keyword">class</span>.java) &#123;  </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">toModel</span><span class="params">(entity: <span class="type">User</span>)</span></span>: UserModel &#123;  </span><br><span class="line">        <span class="keyword">val</span> userModel: UserModel = instantiateModel(entity)  </span><br><span class="line">        userModel.add(linkTo(methodOn(UserController::<span class="keyword">class</span>.java).getUser(entity.id)).withSelfRel())  </span><br><span class="line">        userModel.id = entity.id  </span><br><span class="line">        userModel.name = entity.name  </span><br><span class="line">        userModel.loginName = entity.loginName  </span><br><span class="line">        userModel.phone = entity.phone  </span><br><span class="line">  </span><br><span class="line">        <span class="keyword">return</span> userModel;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">toCollectionModel</span><span class="params">(entities: <span class="type">MutableIterable</span>&lt;<span class="type">User</span>&gt;)</span></span>: CollectionModel&lt;UserModel&gt; &#123;  </span><br><span class="line">        <span class="keyword">val</span> userModels: CollectionModel&lt;UserModel&gt; = <span class="keyword">super</span>.toCollectionModel(entities)  </span><br><span class="line">        userModels.add(methodOn(UserController::<span class="keyword">class</span>.java).getUsers(<span class="literal">null</span>)?.let &#123; linkTo(it).withSelfRel() &#125;)  </span><br><span class="line">        <span class="keyword">return</span> userModels  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这个类把UserController和UserModel 做为构造参数，创建一个类，实现toModel方法，就可以实现model转换的操作。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span>  </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserController</span></span>(<span class="meta">@Autowired</span> <span class="keyword">val</span> userService: UserService) &#123;  </span><br><span class="line">  </span><br><span class="line">    <span class="meta">@Autowired</span>  </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">var</span> userModelAssembler: UserModelAssembler  </span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**  </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 用户信息.  </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> id 用户id  </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@author</span> libo  </span></span><br><span class="line"><span class="comment">     */</span>    <span class="meta">@GetMapping(<span class="meta-string">&quot;/user/&#123;id&#125;&quot;</span>)</span>  </span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">getUser</span><span class="params">(<span class="meta">@PathVariable(<span class="meta-string">&quot;id&quot;</span>)</span> id: <span class="type">String</span>)</span></span>: ResponseEntity&lt;UserModel&gt; &#123;  </span><br><span class="line">        <span class="keyword">val</span> user = getUserById(id)  </span><br><span class="line">        <span class="keyword">return</span> ResponseEntity&lt;UserModel&gt;(userModelAssembler.toModel(user), HttpStatus.OK)  </span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这样即可以达到代码的复用，Controller类看来也不是那么乱了。</p>
+<p>完整代码已放到<a target="_blank" rel="noopener" href="https://gitee.com/dadaoziran/examples/tree/master">gitee仓库</a>，<a href="%5Bgithub.com%5D(https://github.com/iamlibo/examples)">github仓库</a></p>
+<h1 id="Gradle国内加速"><a href="#Gradle国内加速" class="headerlink" title="Gradle国内加速"></a>Gradle国内加速</h1><p>因为使用Gradle 管理项目，在下载Gradle 及依赖的jar还比较慢。可以配置国内加速的办法。</p>
+<ol>
+<li>先配置GRADLE_USER_HOME环境变量到Maven的仓库地址，注意是仓库地址（里面全是jar包的那个），不是maven的主目录</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export GRADLE_USER_HOME=&quot;/env/repository&quot; </span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>下载Gradle到本地（/env/gradle-8.2.1），解压后修改init.d目录下的init.gradle 文件，没有创建即可。</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">allprojects &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        maven &#123; url <span class="string">&#x27;/env/repository&#x27;</span>&#125;</span><br><span class="line">        mavenLocal()</span><br><span class="line">        maven &#123; name <span class="string">&quot;Alibaba&quot;</span> ; url <span class="string">&quot;https://maven.aliyun.com/nexus/content/groups/public/&quot;</span> &#125;</span><br><span class="line">        mavenCentral()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    buildscript &#123; </span><br><span class="line">        repositories &#123; </span><br><span class="line">            maven &#123; name <span class="string">&quot;Alibaba&quot;</span> ; url <span class="string">&#x27;https://maven.aliyun.com/nexus/content/groups/public/&#x27;</span> &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>在没有打开任何项目的情况下（如果打开项目只能设置当前项目的gradle，不是全局的）打开ideaj–&gt;settings–&gt; 搜索gradle，在Gradle user home 选择前面下载的Gradle解压后的地址(/env/gradle-8.2.1)，这样在后续每个项目都不用单独下载Gradle了，而且能够使用aliyun的镜像了。</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN,zh-Hans,default">
     <link itemprop="mainEntityOfPage" href="http://51liveup.cn/2021/12/01/my2021/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -797,78 +920,6 @@ Kong dashboard：官方推荐UI管理工具，也可以使用 restfull 方式 �
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN,zh-Hans,default">
-    <link itemprop="mainEntityOfPage" href="http://51liveup.cn/2018/01/26/Spring-Boot-%E7%AC%94%E8%AE%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="大道自然">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="人生是一场修行">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/01/26/Spring-Boot-%E7%AC%94%E8%AE%B0/" class="post-title-link" itemprop="url">Spring Boot 笔记</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-01-26 12:17:13" itemprop="dateCreated datePublished" datetime="2018-01-26T12:17:13+08:00">2018-01-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-29 09:01:38" itemprop="dateModified" datetime="2021-08-29T09:01:38+08:00">2021-08-29</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Spring-Boot-笔记"><a href="#Spring-Boot-笔记" class="headerlink" title="Spring Boot 笔记"></a>Spring Boot 笔记</h1><p>最近有几个小项目需要进行相关技术预研，使用了Spring Boot这套框架。<br>整个过程有一些零散，从头入门的教程网上很多了，就不再重复写了。只是把自己认为有重要的或者有坑的地方记录下来。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/01/26/Spring-Boot-%E7%AC%94%E8%AE%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -938,7 +989,7 @@ Kong dashboard：官方推荐UI管理工具，也可以使用 restfull 方式 �
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">37</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -951,7 +1002,7 @@ Kong dashboard：官方推荐UI管理工具，也可以使用 restfull 方式 �
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-count">23</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -978,7 +1029,7 @@ Kong dashboard：官方推荐UI管理工具，也可以使用 restfull 方式 �
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
